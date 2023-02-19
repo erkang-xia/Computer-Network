@@ -8,11 +8,13 @@ import sys
 def webServer(port=13331):
     # The createServer() function begins by creating a new socket using the socket() function. The AF_INET parameter specifies that the socket should use IPv4 addressing,
     # and the SOCK_STREAM parameter specifies that the socket should use a stream-oriented protocol (TCP)
+
+
     serverSocket = socket(AF_INET, SOCK_STREAM)
     try:
         # Prepare a server socket
         serverSocket.bind(("127.0.0.1", port))
-        serverSocket.listen(5);
+        serverSocket.listen(5)
 
         while True:
             # Establish the connection
@@ -31,7 +33,8 @@ def webServer(port=13331):
 
             # opens the client requested file.
             # Plenty of guidance online on how to open and read a file in python. How should you read it though if you plan on sending it through a socket?
-            f = open(filename[1:])
+            #print(filename[1:])
+            f = open(filename[1:],'r')
             outputdata = f.read()
             #print("outputdata:", outputdata)
             now = datetime.datetime.now()
@@ -52,9 +55,25 @@ def webServer(port=13331):
             #print("following_header:", following_header)
             connectionSocket.send(("%s\r\n%s\r\n\r\n" % (first_header, following_header)).encode())
 
-            for i in range(0, len(outputdata)):
-                connectionSocket.send(outputdata[i])
+            file1 = open(filename[1:], 'r')
+            Lines = file1.readlines()
+
+            #print("this is for line by line \n")
+            for line in Lines:
+                #print(line)
+                connectionSocket.send(line.encode())
             connectionSocket.close()
+
+            """print("This is for byte by byte\n")
+
+            for i in range(0, len(outputdata)):
+                connectionSocket.send(outputdata[i].encode())
+                print(outputdata[i])
+            connectionSocket.close()"""
+
+
+
+
     except Exception as e:
         # Send response message for file not found
         # Fill in start
