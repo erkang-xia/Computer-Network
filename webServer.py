@@ -17,7 +17,7 @@ def webServer(port=13331):
         while True:
             # Establish the connection
 
-            print('Ready to serve...')
+            #print('Ready to serve...')
             connectionSocket, addr = serverSocket.accept()
             # When a client connects to the server, the accept() method is called on the serversocket object. This method blocks until a client connection is received,
             # at which point it returns a new socket object (clientsocket) that can be used to communicate with the client, as well as the client's address.
@@ -25,7 +25,7 @@ def webServer(port=13331):
             message = connectionSocket.recv(5000).decode()
             # The code reads data from the client using the recv() method on clientsocket, which blocks until data is received. It then decodes the data into a string.
 
-            print(message)
+            #print(message)
 
             filename = message.split()[1]
 
@@ -33,7 +33,7 @@ def webServer(port=13331):
             # Plenty of guidance online on how to open and read a file in python. How should you read it though if you plan on sending it through a socket?
             f = open(filename[1:])
             outputdata = f.read()
-            print("outputdata:", outputdata)
+            #print("outputdata:", outputdata)
             now = datetime.datetime.now()
 
             first_header = "HTTP/1.1 200 OK"
@@ -49,7 +49,7 @@ def webServer(port=13331):
                 "Content-Type": "text/html"
             }
             following_header = "\r\n".join("%s:%s" % (item, header_info[item]) for item in header_info)
-            print("following_header:", following_header)
+            #print("following_header:", following_header)
             connectionSocket.send(("%s\r\n%s\r\n\r\n" % (first_header, following_header)).encode())
 
             for i in range(0, len(outputdata)):
@@ -65,7 +65,7 @@ def webServer(port=13331):
         # Fill in start
         connectionSocket.close()
         # Fill in end
-    print("serverSocket closed")
+    #print("serverSocket closed")
     serverSocket.close()
 
     # Commenting out the below, as its technically not required and some students have moved it erroneously in the While loop. DO NOT DO THAT OR YOURE GONNA HAVE A BAD TIME.
