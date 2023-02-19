@@ -53,7 +53,7 @@ def webServer(port=13331):
             connectionSocket.send(("%s\r\n%s\r\n\r\n" % (first_header, following_header)).encode())
 
             for i in range(0, len(outputdata)):
-                connectionSocket.send(outputdata[i].encode())
+                connectionSocket.send(outputdata[i])
             connectionSocket.close()
     except Exception as e:
         # Send response message for file not found
