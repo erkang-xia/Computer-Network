@@ -49,7 +49,9 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         icmpType, code, checksum, pID, sequence = struct.unpack("bbHHh", icmpHeader)
 
         ip_header = recPacket[:20]
-        version, ihl, tos, total_length, identification, flags, fragment_offset, ttl, protocol, header_checksum, src_addr, dest_addr = struct.unpack("!BBHHHBBHII", ip_header)
+        version_ihl, tos, total_length, identification, flags_fragment, ttl, protocol, header_checksum, src_addr, dest_addr = struct.unpack("!BBHHHBBHII", ip_header)
+        version = version_ihl >> 4
+        ihl = version_ihl & 0xF
 
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0 or pID != ID or icmpType != 0:
@@ -57,6 +59,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         else:
             bytes_received = len(recPacket)
             return howLongInSelect * 1000, bytes_received, ttl
+
 
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
