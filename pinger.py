@@ -43,25 +43,24 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
         if whatReady[0] == []:  # Timeout
-            return "Request timed out."
+            return "Request timed out.", 0, 0
 
         timeReceived = time.time()
         recPacket, addr = mySocket.recvfrom(1024)
 
-        # Fill in start
-
-        # Fetch the ICMP header from the IP packet
         icmpHeader = recPacket[20:28]
         icmpType, code, checksum, pID, sequence = struct.unpack("bbHHh", icmpHeader)
-        #print("Header: ", icmpType, code, checksum, pID, sequence)
 
+        ip_header = recPacket[:20]
+        version, ihl, tos, total_length, identification, flags, fragment_offset, ttl, protocol, header_checksum, src_addr, dest_addr = struct.unpack("!BBHHHBBHII", ip_header)
 
-        # Fill in end
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0 or pID != ID or icmpType != 0:
-            return "Request timed out."
+            return "Request timed out.", 0, 0
         else:
-            return howLongInSelect *1000
+            bytes_received = len(recPacket)
+            return howLongInSelect * 1000, bytes_received, ttl
+
 
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
@@ -108,35 +107,35 @@ def doOnePing(destAddr, timeout):
 
 def ping(host, timeout=1):
     dest = gethostbyname(host)
-    print("Pinging " + dest + " using Python:")
+    print("\nPinging " + dest + " using Python:")
     print("")
 
-    delayRTT = []
+    response = pd.DataFrame(columns=['bytes', 'rtt', 'ttl'])
 
-    for i in range(0, 4):  # Four pings will be sent (loop runs for i=0, 1, 2, 3)
-        delay = doOnePing(dest, timeout)
-        print(delay)
+    for i in range(0, 4):
+        delay, bytes_recv, ttl = doOnePing(dest, timeout)
         if delay != "Request timed out.":
-            delayRTT.append(delay)
-        time.sleep(1)  # one second
+            response = response.append({'bytes': bytes_recv, 'rtt': delay, 'ttl': ttl}, ignore_index=True)
+        print(delay)
+        time.sleep(1)
 
-    if len(delayRTT) == 0:
-        data = {'min': [0], 'avg': [0.0], 'max': [0], 'stddev': [0.0]}
-    else:
-        df = pd.DataFrame(delayRTT, columns=['RTT'])
-        data = {
-            'min': [df['RTT'].min()],
-            'avg': [df['RTT'].mean()],
-            'max': [df['RTT'].max()],
-            'stddev': [df['RTT'].std()]
-        }
+    packet_lost = 0
+    packet_recv = 0
 
-    results = pd.DataFrame(data)
-    print(results)
-    return results
+    for index, row in response.iterrows():
+        if row['bytes'] == 0:
+            packet_lost += 1
+        else:
+            packet_recv += 1
+
+    vars = pd.DataFrame(columns=['min', 'avg', 'max', 'stddev'])
+    vars = vars.append({'min': str(round(response['rtt'].min(), 2)), 'avg': str(round(response['rtt'].mean(), 2)),
+                        'max': str(round(response['rtt'].max(), 2)), 'stddev': str(round(response['rtt'].std(), 2))}, ignore_index=True)
+    print(vars)
+    return vars
+
 
 if __name__ == '__main__':
-    # Test the pinger
-    ping("127.0.0.1")
     ping("google.com")
-    ping("nyu.edu")
+
+
