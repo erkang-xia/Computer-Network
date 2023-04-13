@@ -1,15 +1,15 @@
+from socket import *
 import os
 import sys
 import struct
 import time
 import select
-import socket
-from socket import getprotobyname, gethostbyname, AF_INET, SOCK_RAW
+import binascii
 import pandas as pd
-
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ICMP_ECHO_REQUEST = 8
-
 
 def checksum(string):
     csum = 0
@@ -32,9 +32,6 @@ def checksum(string):
     answer = answer & 0xffff
     answer = answer >> 8 | (answer << 8 & 0xff00)
     return answer
-
-
-
 def receiveOnePing(mySocket, ID, timeout, destAddr):
     timeLeft = timeout
 
@@ -61,7 +58,6 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
             bytes_received = len(recPacket)
             return howLongInSelect * 1000, bytes_received, ttl
 
-
 def sendOnePing(mySocket, destAddr, ID):
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
 
@@ -87,13 +83,11 @@ def sendOnePing(mySocket, destAddr, ID):
 
     mySocket.sendto(packet, (destAddr, 1))  # AF_INET address must be tuple, not str
 
-
     # Both LISTS and TUPLES consist of a number of objects
     # which can be referenced by their position number within the object.
 
 def doOnePing(destAddr, timeout):
     icmp = getprotobyname("icmp")
-
 
     # SOCK_RAW is a powerful socket type. For more details:   https://sock-raw.org/papers/sock_raw
     mySocket = socket(AF_INET, SOCK_RAW, icmp)
@@ -103,7 +97,6 @@ def doOnePing(destAddr, timeout):
     delay = receiveOnePing(mySocket, myID, timeout, destAddr)
     mySocket.close()
     return delay
-
 
 def ping(host, timeout=1):
     dest = gethostbyname(host)
@@ -134,8 +127,5 @@ def ping(host, timeout=1):
     print(vars)
     return vars
 
-
 if __name__ == '__main__':
     ping("google.com")
-
-
