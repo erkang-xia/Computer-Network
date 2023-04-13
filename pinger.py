@@ -1,14 +1,12 @@
-from audioop import avg
-from socket import *
 import os
 import sys
 import struct
 import time
 import select
-import binascii
-import statistics
-# Should use stdev
-# https://docs.python.org/3/library/struct.html
+import socket
+from socket import getprotobyname, gethostbyname, AF_INET, SOCK_RAW
+import pandas as pd
+
 
 ICMP_ECHO_REQUEST = 8
 
@@ -109,50 +107,36 @@ def doOnePing(destAddr, timeout):
 
 
 def ping(host, timeout=1):
-    # timeout=1 means: If one second goes by without a reply from the server,  	
-    # the client assumes that either the client's ping or the server's pong is lost
     dest = gethostbyname(host)
     print("Pinging " + dest + " using Python:")
     print("")
-    delayRTT=[]
-    vars = []
-    #Send ping requests to a server separated by approximately one second
-    #Add something here to collect the delays of each ping in a list so you can calculate vars after your ping
-    
-    for i in range(0,4): #Four pings will be sent (loop runs for i=0, 1, 2, 3)
+
+    delayRTT = []
+
+    for i in range(0, 4):  # Four pings will be sent (loop runs for i=0, 1, 2, 3)
         delay = doOnePing(dest, timeout)
         print(delay)
-        delayRTT.append(delay) 
+        if delay != "Request timed out.":
+            delayRTT.append(delay)
         time.sleep(1)  # one second
-    #packet_min
-    #packet_avg
-    #packet_max
-    #stdev_var
-    #print(delayRTT)
-    packet_min = min(delayRTT)
-    print("min: ", round(packet_min,2))
-    
-    packet_avg = sum(delayRTT) / len(delayRTT)
-    #print ("sumRTT: ", sum(delayRTT))
-    #print ("lenRTT: ", len(delayRTT))
-    print("avg: ", float(round(packet_avg, 2))) 
-    
-    packet_max = max(delayRTT) 
-    print("max: ", round(packet_max,2))
-    
-    stdev_var = statistics.stdev(delayRTT)
-    print("stddev = ", float(stdev_var))
-   
-    vars.append(packet_min)
-    vars.append(packet_avg)
-    vars.append(packet_max)
-    vars.append(stdev_var)
-    #You should have the values of delay for each ping here; fill in calculation for packet_min, packet_avg, packet_max, and stdev
-    #vars = [str(round(packet_min, 8)), str(round(packet_avg, 8)), str(round(packet_max, 8)),str(round(stdev_var), 8)]
-    print ("variables: ", vars[0], " ", vars[1], " ", vars[2], " ", vars[3])
-    return vars
+
+    if len(delayRTT) == 0:
+        data = {'min': [0], 'avg': [0.0], 'max': [0], 'stddev': [0.0]}
+    else:
+        df = pd.DataFrame(delayRTT, columns=['RTT'])
+        data = {
+            'min': [df['RTT'].min()],
+            'avg': [df['RTT'].mean()],
+            'max': [df['RTT'].max()],
+            'stddev': [df['RTT'].std()]
+        }
+
+    results = pd.DataFrame(data)
+    print(results)
+    return results
 
 if __name__ == '__main__':
-    #ping("google.co.il")
-    #ping("google.com")
+    # Test the pinger
     ping("127.0.0.1")
+    ping("google.com")
+    ping("nyu.edu")
