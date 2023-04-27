@@ -117,9 +117,9 @@ def get_route(hostname):
                     }, ignore_index=True)
                     break
 
-        except Exception as e:
-            print(e)
-            continue
+            except Exception as e:
+                print(e)
+                continue
 
 return df
 
