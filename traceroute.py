@@ -6,7 +6,8 @@ import time
 import select
 import binascii
 import pandas as pd
-from socket import gethostbyname, gethostbyaddr, herror
+from socket import gethostbyname, gethostbyaddr, herror, AF_INET, SOCK_RAW, IPPROTO_ICMP, IPPROTO_IP, IP_TTL, htons
+
 
 ICMP_ECHO_REQUEST = 8
 MAX_HOPS = 30
@@ -41,7 +42,7 @@ def build_packet():
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, myID, 1)
     data = struct.pack("d", time.time())
     myChecksum = checksum(header + data)
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, socket.htons(myChecksum), myID, 1)
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, htons(myChecksum), myID, 1)
     packet = header + data
     return packet
 
