@@ -39,59 +39,36 @@ def checksum(string):
 
 def build_packet():
     #Fill in start
+    # In the sendOnePing() method of the ICMP Ping exercise ,firstly the header of our
+    # packet to be sent was made, secondly the checksum was appended to the header and
+    # then finally the complete packet was sent to the destination.
 
-   # Header is type (8), code (8), checksum (16), id (16), sequence (16)
-    packetID = os.getpid() & 0xFFFF
-    myChecksum = 0
-    # Make a dummy header with a 0 checksum
-    # struct -- Interpret strings as packed binary data
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, packetID, 1)
-    data = struct.pack("d", time.time())
-    # Calculate the checksum on the data and the dummy header.
-    myChecksum = checksum(header + data)
+    # Make the header in a similar way to the ping exercise.
+    # Append checksum to the header.
 
-    # Get the right checksum, and put in the header
-
-    if sys.platform == 'darwin':
-        # Convert 16-bit integers from host to network  byte order
-        myChecksum = htons(myChecksum) & 0xffff
-    else:
-        myChecksum = htons(myChecksum)
-
+    # Don’t send the packet yet , just return the final packet in this function.
     #Fill in end
 
     # So the function ending should look like this
 
     packet = header + data
-
     return packet
 
 def get_route(hostname):
-
     timeLeft = TIMEOUT
-
     tracelist1 = [] #This is your list to use when iterating through each trace 
     tracelist2 = [] #This is your list to contain all traces
 
     for ttl in range(1,MAX_HOPS):
-
         for tries in range(TRIES):
             destAddr = gethostbyname(hostname)
 
             #Fill in start
-
             # Make a raw socket named mySocket
-
-            mySocket = socket(AF_INET, SOCK_RAW, getprotobyname("icmp"))
-
             #Fill in end
 
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
             mySocket.settimeout(TIMEOUT)
-
-            print(destAddr)
-            exit()
-            
             try:
                 d = build_packet()
                 mySocket.sendto(d, (hostname, 0))
@@ -111,7 +88,6 @@ def get_route(hostname):
                     tracelist1.append("* * * Request timed out.")
                     #Fill in start
                     #You should add the list above to your all traces list
-                    tracelist2.append(timeLeft)
                     #Fill in end
             except timeout:
                 continue
@@ -119,22 +95,18 @@ def get_route(hostname):
             else:
                 #Fill in start
                 #Fetch the icmp type from the IP packet
-                icmpHeader = recvPacket[20:28]
-                types, code, mychecksum, packetID, sequence = struct.unpack("bbHHh", icmpHeader)
                 #Fill in end
                 try: #try to fetch the hostname
                     #Fill in start
-                    fetch_hostname = mySocket.gethostname()
-                    print(fetch_hostname)
                     #Fill in end
-                except herror:   
-                    #if the host does not provide a hostname
+                except herror:   #if the host does not provide a hostname
                     #Fill in start
-                    hostname = None
                     #Fill in end
+
                 if types == 11:
                     bytes = struct.calcsize("d")
-                    timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
+                    timeSent = struct.unpack("d", recvPacket[28:28 +
+                    bytes])[0]
                     #Fill in start
                     #You should add your responses to your lists here
                     #Fill in end
@@ -153,7 +125,6 @@ def get_route(hostname):
                 else:
                     #Fill in start
                     #If there is an exception/error to your if statements, you should append that to your list here
-                    tracelist2.append('error')
                     #Fill in end
                 break
             finally:
