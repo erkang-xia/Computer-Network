@@ -48,7 +48,6 @@ def build_packet():
 
 
 
-
 def get_route(hostname):
     timeLeft = TIMEOUT
     df = pd.DataFrame(columns=['Hop Count', 'Try', 'IP', 'Hostname', 'Response Code'])
@@ -76,54 +75,58 @@ def get_route(hostname):
                         'Hostname': 'N/A',
                         'Response Code': 'Timeout'
                     }, ignore_index=True)
-                else:
-                    recvPacket, addr = mySocket.recvfrom(1024)
-                    timeReceived = time.time()
-                    timeLeft = timeLeft - howLongInSelect
+                    continue
 
-                    icmpHeader = recvPacket[20:28]
-                    types, code, checksum, packetID, sequence = struct.unpack("bbHHh", icmpHeader)
+                recvPacket, addr = mySocket.recvfrom(1024)
+                timeReceived = time.time()
+                timeLeft = timeLeft - howLongInSelect
 
-                    try:
-                        hostName = gethostbyaddr(addr[0])[0]
-                    except herror:
-                        hostName = "hostname not returnable"
+                icmpHeader = recvPacket[20:28]
+                types, code, checksum, packetID, sequence = struct.unpack("bbHHh", icmpHeader)
 
-                    response = {
+                try:
+                    hostName = gethostbyaddr(addr[0])[0]
+                except herror:
+                    hostName = "hostname not returnable"
+
+                response = {
+                    'Hop Count': ttl,
+                    'Try': tries,
+                    'IP': addr[0],
+                    'Hostname': hostName,
+                    'Response Code': f'ICMP {types}, {code}'
+                }
+
+                df = df.append(response, ignore_index=True)
+
+                if addr[0] == destAddr:
+                    print("Destination reached!")
+                    return df
+                elif timeLeft <= 0:
+                    df = df.append({
+                        'Hop Count': ttl,
+                        'Try': tries,
+                        'IP': 'N/A',
+                        'Hostname': 'N/A',
+                        'Response Code': 'Timeout'
+                    }, ignore_index=True)
+                elif types not in [0, 3, 11]:
+                    df = df.append({
                         'Hop Count': ttl,
                         'Try': tries,
                         'IP': addr[0],
                         'Hostname': hostName,
-                        'Response Code': f'ICMP {types}, {code}'
-                    }
+                        'Response Code': f'Unhandled ICMP type {types}'
+                    }, ignore_index=True)
+                    break
 
-                    df = df.append(response, ignore_index=True)
-
-                    if addr[0] == destAddr:
-                        print("Destination reached!")
-                        return df
-                    elif timeLeft <= 0:
-                        df = df.append({
-                            'Hop Count': ttl,
-                            'Try': tries,
-                            'IP': 'N/A',
-                            'Hostname': 'N/A',
-                            'Response Code': 'Timeout'
-                        }, ignore_index=True)
-                    elif types not in [0, 3, 11]:
-                        df = df.append({
-                            'Hop Count': ttl,
-                            'Try': tries,
-                            'IP': addr[0],
-                            'Hostname': hostName,
-                            'Response Code': f'Unhandled ICMP type {types}'
-                        }, ignore_index=True)
-                        break
             except Exception as e:
                 print(e)
                 continue
 
-    return df  # This line should be indented to be inside the get_route function.
+    return df
+
+
 
 if __name__ == '__main__':
     df = get_route("google.com")
