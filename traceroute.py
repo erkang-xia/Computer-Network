@@ -73,7 +73,7 @@ def get_route(hostname):
                         'Try': tries,
                         'IP': 'N/A',
                         'Hostname': 'N/A',
-                        'Response Code': 'Timeout'
+                        'Response Code': 'timeout'
                     }, ignore_index=True)
                     continue
 
@@ -108,7 +108,7 @@ def get_route(hostname):
                         'Try': tries,
                         'IP': 'N/A',
                         'Hostname': 'N/A',
-                        'Response Code': 'Timeout'
+                        'Response Code': 'timeout'
                     }, ignore_index=True)
                 elif types not in [0, 3, 11]:
                     df = df.append({
@@ -125,6 +125,7 @@ def get_route(hostname):
                 continue
 
     return df
+
 
 
 
