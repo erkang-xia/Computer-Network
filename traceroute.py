@@ -45,6 +45,9 @@ def build_packet():
     packet = header + data
     return packet
 
+
+
+
 def get_route(hostname):
     timeLeft = TIMEOUT
     df = pd.DataFrame(columns=['Hop Count', 'Try', 'IP', 'Hostname', 'Response Code'])
@@ -93,36 +96,34 @@ def get_route(hostname):
                         'Response Code': f'ICMP {types}, {code}'
                     }
 
-                   
-                df = df.append(response, ignore_index=True)
+                    df = df.append(response, ignore_index=True)
 
-                if addr[0] == destAddr:
-                    print("Destination reached!")
-                    return df
-                elif timeLeft <= 0:
-                    df = df.append({
-                        'Hop Count': ttl,
-                        'Try': tries,
-                        'IP': 'N/A',
-                        'Hostname': 'N/A',
-                        'Response Code': 'Timeout'
-                    }, ignore_index=True)
-                elif types not in [0, 3, 11]:
-                    df = df.append({
-                        'Hop Count': ttl,
-                        'Try': tries,
-                        'IP': addr[0],
-                        'Hostname': hostName,
-                        'Response Code': f'Unhandled ICMP type {types}'
-                    }, ignore_index=True)
-                    break
-
+                    if addr[0] == destAddr:
+                        print("Destination reached!")
+                        return df
+                    elif timeLeft <= 0:
+                        df = df.append({
+                            'Hop Count': ttl,
+                            'Try': tries,
+                            'IP': 'N/A',
+                            'Hostname': 'N/A',
+                            'Response Code': 'Timeout'
+                        }, ignore_index=True)
+                    elif types not in [0, 3, 11]:
+                        df = df.append({
+                            'Hop Count': ttl,
+                            'Try': tries,
+                            'IP': addr[0],
+                            'Hostname': hostName,
+                            'Response Code': f'Unhandled ICMP type {types}'
+                        }, ignore_index=True)
+                        break
             except Exception as e:
                 print(e)
                 continue
 
-return df
+    return df  # This line should be indented to be inside the get_route function.
 
-if name == 'main':
+if __name__ == '__main__':
     df = get_route("google.com")
 
