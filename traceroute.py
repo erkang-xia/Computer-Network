@@ -5,10 +5,9 @@ import struct
 import time
 import select
 import binascii
-import pandas as pd
 
 ICMP_ECHO_REQUEST = 8
-MAX_HOPS = 60
+MAX_HOPS = 30
 TIMEOUT = 2.0
 TRIES = 1
 # The packet that we shall send to each router along the path is the ICMP echo
@@ -57,12 +56,13 @@ def build_packet():
 
 def get_route(hostname):
     timeLeft = TIMEOUT
-    df = pd.DataFrame(columns=['Hop Count', 'Try', 'IP', 'Hostname', 'Response Code'])
-    destAddr = gethostbyname(hostname)
-    
+    tracelist1 = [] #This is your list to use when iterating through each trace 
+    tracelist2 = [] #This is your list to contain all traces
+
     for ttl in range(1,MAX_HOPS):
         for tries in range(TRIES):
- 
+            destAddr = gethostbyname(hostname)
+
             #Fill in start
             # Make a raw socket named mySocket
             #Fill in end
@@ -77,30 +77,29 @@ def get_route(hostname):
                 whatReady = select.select([mySocket], [], [], timeLeft)
                 howLongInSelect = (time.time() - startedSelect)
                 if whatReady[0] == []: # Timeout
+                    tracelist1.append("* * * Request timed out.")
                     #Fill in start
-                    #append response to your dataframe including hop #, try #, and "timeout" responses as required by the acceptance criteria
-                    #print (df)
+                    #You should add the list above to your all traces list
                     #Fill in end
                 recvPacket, addr = mySocket.recvfrom(1024)
                 timeReceived = time.time()
                 timeLeft = timeLeft - howLongInSelect
                 if timeLeft <= 0:
+                    tracelist1.append("* * * Request timed out.")
                     #Fill in start
-                    #append response to your dataframe including hop #, try #, and "timeout" responses as required by the acceptance criteria
-                    #print (df)
+                    #You should add the list above to your all traces list
                     #Fill in end
-            except Exception as e:
-                #print (e) # uncomment to view exceptions
+            except timeout:
                 continue
 
             else:
                 #Fill in start
                 #Fetch the icmp type from the IP packet
                 #Fill in end
-                try: #try to fetch the hostname of the router that returned the packet - don't confuse with the hostname that you are tracing
+                try: #try to fetch the hostname
                     #Fill in start
                     #Fill in end
-                except herror:   #if the router host does not provide a hostname use "hostname not returnable"
+                except herror:   #if the host does not provide a hostname
                     #Fill in start
                     #Fill in end
 
@@ -109,27 +108,27 @@ def get_route(hostname):
                     timeSent = struct.unpack("d", recvPacket[28:28 +
                     bytes])[0]
                     #Fill in start
-                    #You should update your dataframe with the required column field responses here
+                    #You should add your responses to your lists here
                     #Fill in end
                 elif types == 3:
                     bytes = struct.calcsize("d")
                     timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
                     #Fill in start
-                    #You should update your dataframe with the required column field responses here
+                    #You should add your responses to your lists here 
                     #Fill in end
                 elif types == 0:
                     bytes = struct.calcsize("d")
                     timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
                     #Fill in start
-                    #You should update your dataframe with the required column field responses here
+                    #You should add your responses to your lists here and return your list if your destination IP is met
                     #Fill in end
-                    return df
                 else:
                     #Fill in start
-                    #If there is an exception/error to your if statements, you should append that to your df here
+                    #If there is an exception/error to your if statements, you should append that to your list here
                     #Fill in end
                 break
-    return df
+            finally:
+                mySocket.close()
 
 if __name__ == '__main__':
     get_route("google.co.il")
